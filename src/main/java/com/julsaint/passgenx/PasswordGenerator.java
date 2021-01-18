@@ -25,7 +25,7 @@ import org.xml.sax.SAXException;
 class PasswordGenerator {
     private int length;//password length
     static StringBuilder PasswordsString = new StringBuilder();
-    static int PasswordId;
+    static StringBuilder PasswordsXmlString = new StringBuilder();
     private static final String PASSWORDS_FILE = "passwords.xml";//passwords file
     private final char[] PasswordCharArray = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 
     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
@@ -47,12 +47,17 @@ class PasswordGenerator {
     }
     
     boolean SavePassword(int PasswordId, String Name, String Password){
-        try(PrintWriter Writer = new PrintWriter(new BufferedWriter(new FileWriter(PASSWORDS_FILE, true)))){
-            Writer.printf("<GeneratedPassword>\n");
-            Writer.printf("\t<PasswordId>%d</PasswordId>\n", PasswordId);
-            Writer.printf("\t<Name>%s</Name>\n", Name);
-            Writer.printf("\t<Password>%s</Password>\n", Password);
-            Writer.printf("</GeneratedPassword>\n");
+        String NewPasswordXmlString = "";
+        try{
+            NewPasswordXmlString = NewPasswordXmlString.concat(PasswordGeneratorLogin.XML_HEADER);
+            NewPasswordXmlString = NewPasswordXmlString.concat("<StoredPasswords>\n");
+            String PasswordsXmlStr = String.format("\t<StoredPassword>\n\t\t<PasswordId>%d</PasswordId>\n\t\t<Name>%s</Name>\n\t\t<Password>%s</Password>\n\t</StoredPassword>\n", PasswordId, Name, Password);
+            NewPasswordXmlString = NewPasswordXmlString.concat(PasswordsXmlStr);
+            NewPasswordXmlString = NewPasswordXmlString.concat(BuildXmlString());
+            NewPasswordXmlString = NewPasswordXmlString.concat("</StoredPasswords>");
+            PrintWriter Writer = new PrintWriter(new BufferedWriter(new FileWriter(PASSWORDS_FILE, false)));
+            Writer.printf(NewPasswordXmlString);
+            Writer.close();
         }
         catch(IOException e){
             System.err.printf("IOException: %s", e.getMessage());
@@ -61,36 +66,63 @@ class PasswordGenerator {
         return true;
     }
     
-    String GetPasswords(){
-        String PasswordsId;
+    String GetPasswordsToDisplay(){
+        String PasswordId;
         String Name;
         String Password;
         String PasswordLineStr = "";
+        String PasswordXmlLineStr = "";
         try{
             File InputFile = new File(PASSWORDS_FILE);
             DocumentBuilderFactory DocumentFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder DocumentBuilder = DocumentFactory.newDocumentBuilder();
             Document Doc = DocumentBuilder.parse(InputFile);
             Doc.getDocumentElement().normalize();
-            NodeList NList = Doc.getElementsByTagName("GeneratedPassword");
-            
+            NodeList NList = Doc.getElementsByTagName("StoredPassword");            
             for(int it = 0; it < NList.getLength(); it++){
                 Node nNode = NList.item(it);
                 if(nNode.getNodeType() == Node.ELEMENT_NODE){
                     Element eElement = (Element) nNode;
-                    PasswordsId = eElement.getElementsByTagName("PasswordId").item(0).getTextContent();
+                    PasswordId = eElement.getElementsByTagName("PasswordId").item(0).getTextContent();
                     Name = eElement.getElementsByTagName("Name").item(0).getTextContent();
                     Password = eElement.getElementsByTagName("Password").item(0).getTextContent();
-                    PasswordLineStr = "Password Id: " + PasswordsId + "\nName: " + Name + "\nPassword: " + Password + "\n";
+                    PasswordLineStr += "Password Id: " + PasswordId + "\nName: " + Name + "\nPassword: " + Password + "\n\n";
                     PasswordsString.append(PasswordLineStr);
-                }
-                
-            }   
+                }               
+            } 
         }
         catch(IOException | ParserConfigurationException | SAXException e){
             System.err.printf("IOException: %s", e.getMessage());
         }
-        System.out.println(PasswordsString.toString());
         return PasswordsString.toString();
+    }
+    
+    String BuildXmlString(){
+        String PasswordId;
+        String Name;
+        String Password;
+        StringBuilder PasswordsXmlStr = new StringBuilder();
+        try{
+            File InputFile = new File(PASSWORDS_FILE);
+            DocumentBuilderFactory DocumentFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder DocumentBuilder = DocumentFactory.newDocumentBuilder();
+            Document Doc = DocumentBuilder.parse(InputFile);
+            Doc.getDocumentElement().normalize();
+            NodeList NList = Doc.getElementsByTagName("StoredPassword");
+            for(int it = 0; it < NList.getLength(); it++){
+                Node nNode = NList.item(it);
+                if(nNode.getNodeType() == Node.ELEMENT_NODE){
+                    Element eElement = (Element) nNode;
+                    PasswordId = eElement.getElementsByTagName("PasswordId").item(0).getTextContent();
+                    Name = eElement.getElementsByTagName("Name").item(0).getTextContent();
+                    Password = eElement.getElementsByTagName("Password").item(0).getTextContent();
+                    PasswordsXmlStr.append(String.format("\t<StoredPassword>\n\t\t<PasswordId>%s</PasswordId>\n\t\t<Name>%s</Name>\n\t\t<Password>%s</Password>\n\t</StoredPassword>\n", PasswordId, Name, Password));
+                }               
+            } 
+        }
+        catch(IOException | ParserConfigurationException | SAXException e){
+            System.err.printf("IOException: %s", e.getMessage());
+        }
+        return PasswordsXmlStr.toString();   
     }
 }
