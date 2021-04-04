@@ -7,7 +7,7 @@ package com.julsaint.passgenx;
 
 /**
  *
- * @author rjpro
+ * @author Ralph Julsaint
  */
 public class PasswordGenerationPanel extends javax.swing.JPanel {
     private String GeneratedPassword;
@@ -18,7 +18,6 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
         initComponents();
         PasswordLengthSpinner.setValue(8);
         PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());
-        this.setSize(500, 400);
     }
 
     /**
@@ -44,7 +43,9 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
         PassIdTextField = new javax.swing.JTextField();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
 
-        setPreferredSize(new java.awt.Dimension(500, 300));
+        setMinimumSize(new java.awt.Dimension(500, 400));
+        setName(""); // NOI18N
+        setPreferredSize(new java.awt.Dimension(500, 400));
 
         PasswordEntityLabel.setText("Name:");
         PasswordEntityLabel.setToolTipText("");
@@ -86,6 +87,11 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
 
         PasswordDeleteButton.setText("Delete");
         PasswordDeleteButton.setToolTipText("Delete password");
+        PasswordDeleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                PasswordDeleteButtonActionPerformed(evt);
+            }
+        });
 
         PassIdLabel.setText("Pass ID:");
         PassIdLabel.setToolTipText("");
@@ -192,6 +198,10 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
             GeneratedPasswordLabel.setText("");
         }
     }//GEN-LAST:event_SaveButtonActionPerformed
+
+    private void PasswordDeleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordDeleteButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_PasswordDeleteButtonActionPerformed
 
     
     private boolean ValidateSpinnerValue(){
