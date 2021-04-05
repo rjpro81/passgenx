@@ -23,9 +23,7 @@ import org.xml.sax.SAXException;
  * @author Ralph Julsaint
  */
 class PasswordGenerator {
-    private int length;//password length
-    static StringBuilder PasswordsString = new StringBuilder();
-    static StringBuilder PasswordsXmlString = new StringBuilder();
+    java.util.List<String> PassIdList = new java.util.ArrayList<>();;
     private static final String PASSWORDS_FILE = "passwords.xml";//passwords file
     private final char[] PasswordCharArray = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 
     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
@@ -33,8 +31,8 @@ class PasswordGenerator {
     '7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
     'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
     'U', 'V', 'W', 'X', 'Y', 'Z', '~', '!', '@', '#', '$', '%',
-    '^', '&', '*', '(', ')', '-', '+', '=', '_', '{', '}', '[',
-    ']', '|', ':', ';', '/', '<', '>', ',', '.'};//character types used for password generation       
+    '^', '&', '*', '(', ')', '-', '+', '_', '{', '}', '|', 
+    '/', ',', '.'};//character types used for password generation       
     
     String GeneratePassword(int length){
         SecureRandom generator = new SecureRandom();
@@ -55,9 +53,9 @@ class PasswordGenerator {
             NewPasswordXmlString = NewPasswordXmlString.concat(PasswordsXmlStr);
             NewPasswordXmlString = NewPasswordXmlString.concat(BuildXmlString());
             NewPasswordXmlString = NewPasswordXmlString.concat("</StoredPasswords>");
-            PrintWriter Writer = new PrintWriter(new BufferedWriter(new FileWriter(PASSWORDS_FILE, false)));
-            Writer.printf(NewPasswordXmlString);
-            Writer.close();
+            try (PrintWriter Writer = new PrintWriter(new BufferedWriter(new FileWriter(PASSWORDS_FILE, false)))) {
+                Writer.printf(NewPasswordXmlString);
+            }
         }
         catch(IOException e){
             System.err.printf("IOException: %s", e.getMessage());
@@ -66,12 +64,68 @@ class PasswordGenerator {
         return true;
     }
     
+    boolean DeletePassword(String PassId){
+        String PasswordId = "";
+        String Name;
+        String Password;
+        String NewPasswordXmlString = "";
+        boolean HasPassId = false;
+        try{
+            File InputFile = new File(PASSWORDS_FILE);
+            DocumentBuilderFactory DocumentFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder DocumentBuilder = DocumentFactory.newDocumentBuilder();
+            Document Doc = DocumentBuilder.parse(InputFile);
+            Doc.getDocumentElement().normalize();
+            NodeList NList = Doc.getElementsByTagName("StoredPassword");            
+            for(int it = 0; it < NList.getLength(); it++){
+                Node nNode = NList.item(it);
+                if(nNode.getNodeType() == Node.ELEMENT_NODE){
+                    Element eElement = (Element) nNode;
+                    PasswordId = eElement.getElementsByTagName("PasswordId").item(0).getTextContent();                  
+                    Name = eElement.getElementsByTagName("Name").item(0).getTextContent();
+                    Password = eElement.getElementsByTagName("Password").item(0).getTextContent();
+                    /*Delete the stored password that user passes through as parameter*/
+                    if(!PasswordId.equals(PassId)){
+                        NewPasswordXmlString = NewPasswordXmlString.concat(String.format("\t<StoredPassword>\n\t\t<PasswordId>%s</PasswordId>\n\t\t<Name>%s</Name>\n\t\t<Password>%s</Password>\n\t</StoredPassword>\n", PasswordId, Name, Password));  
+                    }
+                }
+                PassIdList.add(PasswordId);
+            } 
+        }
+        catch(IOException | ParserConfigurationException | SAXException e){
+            System.err.printf("IOException: %s", e.getMessage());
+        }
+        
+        for(String Id : PassIdList){
+            if (PassId.equals(Id)){
+                HasPassId = true;  
+                break;
+            }          
+        }
+        
+        if(HasPassId == false){
+            javax.swing.JOptionPane.showMessageDialog(null, "This Id does not exist!");
+            return false;
+        }
+
+        try (PrintWriter Writer = new PrintWriter(new BufferedWriter(new FileWriter(PASSWORDS_FILE, false)))) {
+                String PasswordXmlString = PasswordGeneratorLogin.XML_HEADER;
+                PasswordXmlString = PasswordXmlString.concat("<StoredPasswords>\n");
+                PasswordXmlString = PasswordXmlString.concat(NewPasswordXmlString);
+                PasswordXmlString = PasswordXmlString.concat("</StoredPasswords>");
+                Writer.printf(PasswordXmlString);               
+        }
+        catch(IOException e){
+            System.err.printf("IOException: %s", e.getMessage());
+        } 
+        return true;
+    }
+    
     String GetPasswordsToDisplay(){
         String PasswordId;
         String Name;
         String Password;
-        String PasswordLineStr = "";
-        String PasswordXmlLineStr = "";
+        String PasswordsXmlStr = "";
         try{
             File InputFile = new File(PASSWORDS_FILE);
             DocumentBuilderFactory DocumentFactory = DocumentBuilderFactory.newInstance();
@@ -86,15 +140,14 @@ class PasswordGenerator {
                     PasswordId = eElement.getElementsByTagName("PasswordId").item(0).getTextContent();
                     Name = eElement.getElementsByTagName("Name").item(0).getTextContent();
                     Password = eElement.getElementsByTagName("Password").item(0).getTextContent();
-                    PasswordLineStr += "Password Id: " + PasswordId + "\nName: " + Name + "\nPassword: " + Password + "\n\n";
-                    PasswordsString.append(PasswordLineStr);
+                    PasswordsXmlStr = PasswordsXmlStr.concat(String.format("Password Id: %s\nName: %s\nPassword: %s\n\n", PasswordId, Name, Password));
                 }               
             } 
         }
         catch(IOException | ParserConfigurationException | SAXException e){
             System.err.printf("IOException: %s", e.getMessage());
         }
-        return PasswordsString.toString();
+        return PasswordsXmlStr;
     }
     
     String BuildXmlString(){
