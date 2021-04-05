@@ -96,6 +96,7 @@ class PasswordGenerator {
             System.err.printf("IOException: %s", e.getMessage());
         }
         
+        /*Go through list of password Id's and if exists break out of loop and delete the appropriate password*/
         for(String Id : PassIdList){
             if (PassId.equals(Id)){
                 HasPassId = true;  
