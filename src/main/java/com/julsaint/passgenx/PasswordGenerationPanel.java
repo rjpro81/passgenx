@@ -27,7 +27,11 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
     public PasswordGenerationPanel() {
         initComponents();
         PasswordLengthSpinner.setValue(8);
-        PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());
+        try {
+            PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());
+        } catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            Logger.getLogger(PasswordGenerationPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -204,12 +208,12 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
             try{
                 javax.crypto.KeyGenerator KeyGenerator = javax.crypto.KeyGenerator.getInstance("AES");
                 KeyGenerator.init(256);
-                javax.crypto.SecretKey key = KeyGenerator.generateKey();
-                
+                PasswordGenerator.key = KeyGenerator.generateKey();               
                 javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES");
-                cipher.init(Cipher.ENCRYPT_MODE, key, new java.security.SecureRandom());
+                cipher.init(Cipher.ENCRYPT_MODE, PasswordGenerator.key, new java.security.SecureRandom());
                 PasswordCipherText = cipher.doFinal(Password.getBytes());
                 CiperTextToString = Base64.getEncoder().encodeToString(PasswordCipherText);
+                PasswordGenerator.CiperTextMap.put(CiperTextToString, PasswordGenerator.key);
             }
             catch(NoSuchAlgorithmException e){
                 System.err.println(e);  
@@ -219,7 +223,11 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
             boolean IsSaved = PassGenerator.SavePassword(PasswordId, Name, CiperTextToString);
             if(IsSaved){
                 javax.swing.JOptionPane.showMessageDialog(this, "Password saved.");
-                PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());//update text area after adding password
+                try {
+                    PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());//update text area after adding password
+                } catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+                    Logger.getLogger(PasswordGenerationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             else{
                 javax.swing.JOptionPane.showMessageDialog(this, "Password not saved.");
@@ -236,7 +244,11 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
             boolean result = Generator.DeletePassword(PassId);
             if(result){
                 javax.swing.JOptionPane.showMessageDialog(this, "Password deleted.");
-                PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());//update text area after deleting password
+                try {
+                    PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());//update text area after deleting password
+                } catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+                    Logger.getLogger(PasswordGenerationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             else{
                 javax.swing.JOptionPane.showMessageDialog(this, "Password not deleted.");
