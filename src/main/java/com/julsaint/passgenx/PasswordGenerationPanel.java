@@ -5,6 +5,16 @@
  */
 package com.julsaint.passgenx;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 /**
  *
  * @author Ralph Julsaint
@@ -184,12 +194,32 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
 
         if(ValidatePasswordFields()){
             PasswordGenerator PassGenerator = new PasswordGenerator();
-            int PasswordId = 10;
+            java.util.Random Generator = new java.util.Random();
+            int PasswordId = Generator.nextInt(10000 + 1) + 10000;
             String Name = PasswordEntityTextField.getText();
             String Password = GeneratedPasswordLabel.getText();
-            boolean IsSaved = PassGenerator.SavePassword(PasswordId, Name, Password);
+            byte[] PasswordCipherText;
+            String CiperTextToString = "";
+            /*encrypt password*/
+            try{
+                javax.crypto.KeyGenerator KeyGenerator = javax.crypto.KeyGenerator.getInstance("AES");
+                KeyGenerator.init(256);
+                javax.crypto.SecretKey key = KeyGenerator.generateKey();
+                
+                javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES");
+                cipher.init(Cipher.ENCRYPT_MODE, key, new java.security.SecureRandom());
+                PasswordCipherText = cipher.doFinal(Password.getBytes());
+                CiperTextToString = Base64.getEncoder().encodeToString(PasswordCipherText);
+            }
+            catch(NoSuchAlgorithmException e){
+                System.err.println(e);  
+            } catch (NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+                Logger.getLogger(PasswordGenerationPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            boolean IsSaved = PassGenerator.SavePassword(PasswordId, Name, CiperTextToString);
             if(IsSaved){
                 javax.swing.JOptionPane.showMessageDialog(this, "Password saved.");
+                PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());//update text area after adding password
             }
             else{
                 javax.swing.JOptionPane.showMessageDialog(this, "Password not saved.");
@@ -200,7 +230,21 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_SaveButtonActionPerformed
 
     private void PasswordDeleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordDeleteButtonActionPerformed
-        // TODO add your handling code here:
+        String PassId = PassIdTextField.getText();
+        PasswordGenerator Generator = new PasswordGenerator();
+        if(!PassId.equals("")){
+            boolean result = Generator.DeletePassword(PassId);
+            if(result){
+                javax.swing.JOptionPane.showMessageDialog(this, "Password deleted.");
+                PasswordsTextArea.setText(new PasswordGenerator().GetPasswordsToDisplay());//update text area after deleting password
+            }
+            else{
+                javax.swing.JOptionPane.showMessageDialog(this, "Password not deleted.");
+            }
+        }
+        else{
+            javax.swing.JOptionPane.showMessageDialog(this, "Enter a valid password ID.");
+        }
     }//GEN-LAST:event_PasswordDeleteButtonActionPerformed
 
     
