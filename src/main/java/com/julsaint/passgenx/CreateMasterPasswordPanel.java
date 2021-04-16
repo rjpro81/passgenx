@@ -118,11 +118,14 @@ public class CreateMasterPasswordPanel extends javax.swing.JPanel {
             PasswordGeneratorLogin Login = new PasswordGeneratorLogin();
             StatusCode = Login.CreateNewUser(MPassword);
             if(StatusCode == 0){
-                javax.swing.JOptionPane.showMessageDialog(this, "Login Created.");
+                javax.swing.JOptionPane.showMessageDialog(this, "Master password created.");
                 MainApplicationPanel.UpdatePanelContent(MainApplicationPanel.GetInstance(), new LoginPanel());
             }
+            else if(MPassword.length() < 8){
+                javax.swing.JOptionPane.showMessageDialog(this, "Master password must be at least 8 characters!");
+            }
             else{
-                javax.swing.JOptionPane.showMessageDialog(this, "Login Not Created.");
+                javax.swing.JOptionPane.showMessageDialog(this, "Master password not created.");
             }
         }
         else{
