@@ -17,6 +17,7 @@ import java.security.SecureRandom;
  */
 class PasswordGeneratorLogin {
     static long UserId;
+    static long UserIdentification;
     static final String LOGIN_FILE = "masterpasswords.xml";
     static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     
@@ -81,6 +82,7 @@ class PasswordGeneratorLogin {
     boolean GetUserCredentials(String UserPasswordInput){
         try{
             String userPassword = "";
+            String user = "";
             File InputFile = new File(LOGIN_FILE);
             DocumentBuilderFactory DocumentFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder DocumentBuilder = DocumentFactory.newDocumentBuilder();
@@ -91,9 +93,11 @@ class PasswordGeneratorLogin {
                 Node nNode = NList.item(it);
                 if(nNode.getNodeType() == Node.ELEMENT_NODE){
                     Element eElement = (Element) nNode;
-                    userPassword = eElement.getElementsByTagName("UserPassword").item(0).getTextContent();                    
+                    userPassword = eElement.getElementsByTagName("UserPassword").item(0).getTextContent(); 
+                    user = eElement.getElementsByTagName("UserId").item(0).getTextContent();
                 }
                 if(userPassword.equals(UserPasswordInput)){
+                    UserIdentification = Integer.parseInt(user);
                     return true;
                 }
             }          

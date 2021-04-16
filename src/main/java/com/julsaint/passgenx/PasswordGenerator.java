@@ -9,7 +9,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -23,7 +29,9 @@ import org.xml.sax.SAXException;
  * @author Ralph Julsaint
  */
 class PasswordGenerator {
-    java.util.List<String> PassIdList = new java.util.ArrayList<>();;
+    java.util.List<String> PassIdList = new java.util.ArrayList<>();
+    static javax.crypto.SecretKey key;
+    static java.util.Map<String, javax.crypto.SecretKey> CiperTextMap = new java.util.HashMap<>();
     private static final String PASSWORDS_FILE = "passwords.xml";//passwords file
     private final char[] PasswordCharArray = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 
     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
@@ -122,7 +130,7 @@ class PasswordGenerator {
         return true;
     }
     
-    String GetPasswordsToDisplay(){
+    String GetPasswordsToDisplay() throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
         String PasswordId;
         String Name;
         String Password;
@@ -141,7 +149,20 @@ class PasswordGenerator {
                     PasswordId = eElement.getElementsByTagName("PasswordId").item(0).getTextContent();
                     Name = eElement.getElementsByTagName("Name").item(0).getTextContent();
                     Password = eElement.getElementsByTagName("Password").item(0).getTextContent();
-                    PasswordsXmlStr = PasswordsXmlStr.concat(String.format("Password Id: %s\nName: %s\nPassword: %s\n\n", PasswordId, Name, Password));
+                    byte[] PasswordPlainText;
+                    String PlainTextToString = "";
+                    /*Decrypt passwords*/
+                    try{
+                        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES");
+                        key = CiperTextMap.get(Password);
+                        cipher.init(Cipher.DECRYPT_MODE, key, new java.security.SecureRandom());
+                        PasswordPlainText = cipher.doFinal(java.util.Base64.getDecoder().decode(Password));
+                        PlainTextToString = new String(PasswordPlainText);
+                    }
+                    catch(NoSuchAlgorithmException | NoSuchPaddingException e){
+                        System.err.println(e);
+                    }
+                    PasswordsXmlStr = PasswordsXmlStr.concat(String.format("Password Id: %s\nName: %s\nPassword: %s\n\n", PasswordId, Name, PlainTextToString));
                 }               
             } 
         }
