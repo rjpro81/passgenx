@@ -181,7 +181,10 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
             GeneratedPasswordLabel.setText(GeneratedPassword);
         }
     }//GEN-LAST:event_PasswordGenerateButtonActionPerformed
-
+    /**
+     * Validates password generation fields
+     * @return true if valid, false if invalid
+     */
     private boolean ValidatePasswordFields(){
         if(PasswordEntityTextField.getText().equals("")){
             javax.swing.JOptionPane.showMessageDialog(this, "You must enter a value in the name field!");
@@ -194,6 +197,10 @@ public class PasswordGenerationPanel extends javax.swing.JPanel {
         return true;
     }
     
+    /**
+     * Save the generated password
+     * @param evt 
+     */
     private void SaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveButtonActionPerformed
 
         if(ValidatePasswordFields()){
